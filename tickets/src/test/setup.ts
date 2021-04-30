@@ -2,6 +2,8 @@ import { MongoMemoryServer } from 'mongodb-memory-server'
 import mongoose from 'mongoose'
 import jwt from 'jsonwebtoken'
 
+jest.mock('../nats-wrapper')
+
 declare global {
   namespace NodeJS {
     interface Global {
@@ -25,6 +27,7 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
+  jest.clearAllMocks()
   const collections = await mongoose.connection.db.collections()
 
   for (const collection of collections) {

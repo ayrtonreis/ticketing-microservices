@@ -2,6 +2,7 @@ import request from 'supertest'
 import mongoose from 'mongoose'
 
 import { app } from '../../app'
+import { natsWrapper } from '../../nats-wrapper'
 
 const BASE_URL = '/api/tickets'
 
@@ -113,4 +114,31 @@ it('should update the ticket provided valid inputs', async () => {
 
   expect(afterResponse.body.title).toEqual('New title')
   expect(afterResponse.body.price).toEqual(100)
+})
+
+it('should publish an event', async () => {
+  const signInCookie = global.getSigninCookie()
+
+  const createdResponse = await request(app)
+    .post(BASE_URL)
+    .set('Cookie', signInCookie)
+    .send({
+      title: 'A title',
+      price: 20,
+    })
+
+  await request(app)
+    .put(`${BASE_URL}/${createdResponse.body.id}`)
+    .set('Cookie', signInCookie)
+    .send({
+      title: 'New title',
+      price: 100,
+    })
+    .expect(200)
+
+  await request(app)
+    .get(`${BASE_URL}/${createdResponse.body.id}`)
+    .expect(200)
+
+  expect(natsWrapper.client.publish).toHaveBeenCalled()
 })
