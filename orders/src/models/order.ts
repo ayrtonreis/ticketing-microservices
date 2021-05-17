@@ -1,7 +1,11 @@
 import mongoose from 'mongoose'
 import { OrderStatus } from '@ars-tickets/common'
 
+
 import { TicketDoc } from './ticket'
+
+export { OrderStatus }
+
 
 interface OrderAttrs {
   userId: string
@@ -33,11 +37,11 @@ const orderSchema = new mongoose.Schema({
     default: OrderStatus.Created,
   },
   expiresAt: {
-    type: mongoose.Schema.Types.Date
+    type: mongoose.Schema.Types.Date,
   },
   ticket: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Ticket'
+    ref: 'Ticket',
   },
 }, {
   toJSON: {
@@ -52,6 +56,6 @@ orderSchema.statics.build = (attrs: OrderAttrs) => {
   return new Order(attrs)
 }
 
-const Order = mongoose.model<OrderDoc, OrderModel>('Oder', orderSchema)
+const Order = mongoose.model<OrderDoc, OrderModel>('Order', orderSchema)
 
 export { Order }
