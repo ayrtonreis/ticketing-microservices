@@ -1,10 +1,11 @@
 import mongoose from 'mongoose'
 import request from 'supertest'
+import { OrderStatus } from '@ars-tickets/common'
 
 import { app } from '../../app'
-import { Ticket } from '../../models/ticket'
 import { Order } from '../../models/order'
-import { OrderStatus } from '@ars-tickets/common'
+import { Ticket } from '../../models/ticket'
+import { natsWrapper } from '../../nats-wrapper'
 
 
 it('should return an error if the ticket does not exist', async () => {
@@ -59,4 +60,19 @@ it('should reserve a ticket', async () => {
 })
 
 
-it.todo('should emit an order created event')
+it('should emit an order created event', async () => {
+  const ticket = Ticket.build({
+    title: 'A title',
+    price: 20,
+  })
+
+  await ticket.save()
+
+  await request(app)
+    .post('/api/orders')
+    .set('Cookie', global.getSigninCookie())
+    .send({ ticketId: ticket.id })
+    .expect(201)
+
+  expect(natsWrapper.client.publish).toHaveBeenCalled()
+})
