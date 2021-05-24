@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 
 import { app } from '../../app'
 import { natsWrapper } from '../../nats-wrapper'
+import { Ticket } from '../../models/tickets'
 
 const BASE_URL = '/api/tickets'
 
@@ -141,4 +142,29 @@ it('should publish an event', async () => {
     .expect(200)
 
   expect(natsWrapper.client.publish).toHaveBeenCalled()
+})
+
+it('should reject updated if the ticket is reserved', async () => {
+  const signInCookie = global.getSigninCookie()
+
+  const createdResponse = await request(app)
+    .post(BASE_URL)
+    .set('Cookie', signInCookie)
+    .send({
+      title: 'A title',
+      price: 20,
+    })
+
+  const ticket = await Ticket.findById(createdResponse.body.id)
+  ticket!.set({ orderId: mongoose.Types.ObjectId().toHexString() })
+  await ticket!.save()
+
+  await request(app)
+    .put(`${BASE_URL}/${createdResponse.body.id}`)
+    .set('Cookie', signInCookie)
+    .send({
+      title: 'New title',
+      price: 100,
+    })
+    .expect(400)
 })

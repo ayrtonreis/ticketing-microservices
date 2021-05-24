@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { NotAuthorizedError, NotFoundError, requireAuth, validateRequest } from '@ars-tickets/common'
+import { BadRequestError, NotAuthorizedError, NotFoundError, requireAuth, validateRequest } from '@ars-tickets/common'
 import { body } from 'express-validator'
 
 import { Ticket } from '../models/tickets'
@@ -18,7 +18,10 @@ router.put('/api/tickets/:id', requireAuth,
 
     if (!ticket) throw new NotFoundError()
 
+    if(ticket.orderId) throw new BadRequestError('Cannot edit a reserved ticket')
+
     if (ticket.userId !== req.currentUser!.id) throw new NotAuthorizedError()
+
 
     ticket.set({
       title: req.body.title,
