@@ -1,11 +1,10 @@
 import mongoose from 'mongoose'
 import { OrderStatus } from '@ars-tickets/common'
-
+import { updateIfCurrentPlugin } from 'mongoose-update-if-current'
 
 import { TicketDoc } from './ticket'
 
 export { OrderStatus }
-
 
 interface OrderAttrs {
   userId: string
@@ -19,6 +18,7 @@ interface OrderDoc extends mongoose.Document {
   status: OrderStatus
   expiresAt: Date
   ticket: TicketDoc
+  version: number
 }
 
 interface OrderModel extends mongoose.Model<OrderDoc> {
@@ -51,6 +51,9 @@ const orderSchema = new mongoose.Schema({
     },
   },
 })
+
+orderSchema.set('versionKey', 'version')
+orderSchema.plugin(updateIfCurrentPlugin)
 
 orderSchema.statics.build = (attrs: OrderAttrs) => {
   return new Order(attrs)
